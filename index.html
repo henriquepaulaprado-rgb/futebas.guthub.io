@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚽ Jogo de Futebol - RPG de Carreira Completo</title>
+    <title>⚽ Carreira de Craque - O Jogo Definitivo</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
+            background-color: #0b0f19;
             color: #f8fafc;
             margin: 0;
             padding: 20px;
@@ -19,9 +19,9 @@
         .game-container {
             background-color: #1e293b;
             border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
             width: 100%;
-            max-width: 650px;
+            max-width: 680px;
             padding: 25px;
             box-sizing: border-box;
         }
@@ -33,23 +33,26 @@
         }
         .stats-panel {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
             background: #0f172a;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
         }
         .stat-item {
             display: flex;
             justify-content: space-between;
+            background: #1e293b;
+            padding: 4px 8px;
+            border-radius: 4px;
         }
         .story-box {
             background-color: #334155;
             padding: 15px;
             border-radius: 8px;
-            min-height: 120px;
+            min-height: 110px;
             margin-bottom: 20px;
             line-height: 1.5;
             font-size: 1.05rem;
@@ -74,10 +77,7 @@
             background-color: #0284c7;
             transform: translateY(-1px);
         }
-        button:active:not(:disabled) {
-            transform: translateY(0);
-        }
-        input, select {
+        input {
             width: 100%;
             padding: 10px;
             margin-top: 8px;
@@ -107,21 +107,22 @@
     <div id="progress-indicator" class="progress-indicator"></div>
     
     <div id="stats-panel" class="stats-panel" style="display: none;">
-        <div class="stat-item"><span>Jogador:</span> <strong id="p-name">-</strong></div>
+        <div class="stat-item"><span>Nome:</span> <strong id="p-name">-</strong></div>
         <div class="stat-item"><span>Posição:</span> <strong id="p-pos">-</strong></div>
         <div class="stat-item"><span>Clube:</span> <strong id="p-clube">-</strong></div>
+        <div class="stat-item"><span>Gols:</span> <strong id="p-gols">0</strong></div>
+        <div class="stat-item"><span>Assistências:</span> <strong id="p-asts">0</strong></div>
+        <div class="stat-item"><span>Títulos:</span> <strong id="p-tit">0</strong></div>
         <div class="stat-item"><span>Atributo:</span> <strong id="p-attr">50</strong></div>
         <div class="stat-item"><span>Técnico:</span> <strong id="p-tec">50</strong></div>
-        <div class="stat-item"><span>Torcida:</span> <strong id="p-torcida">50</strong></div>
+        <div class="stat-item"><span>Torcida:</span> <strong id="p-torc">50</strong></div>
     </div>
 
     <div id="story-box" class="story-box">
         Carregando jogo...
     </div>
 
-    <div id="choices-container" class="choices-container">
-        <!-- Botões gerados dinamicamente -->
-    </div>
+    <div id="choices-container" class="choices-container"></div>
 </div>
 
 <script>
@@ -129,12 +130,15 @@
         name: "",
         position: "",
         clube: "",
+        gols: 0,
+        assistencias: 0,
+        titulos: 0,
         atributo: 50,
         tecnico: 50,
         torcida: 50
     };
 
-    let stepIndex = 0; // Controla as 10 etapas
+    let stepIndex = 0;
 
     const storyBox = document.getElementById("story-box");
     const choicesContainer = document.getElementById("choices-container");
@@ -145,117 +149,231 @@
         document.getElementById("p-name").innerText = player.name;
         document.getElementById("p-pos").innerText = player.position;
         document.getElementById("p-clube").innerText = player.clube;
+        document.getElementById("p-gols").innerText = player.gols;
+        document.getElementById("p-asts").innerText = player.assistencias;
+        document.getElementById("p-tit").innerText = player.titulos;
         document.getElementById("p-attr").innerText = player.atributo;
-        document.getElementById("p-tec").innerText = player.tecnico;
-        document.getElementById("p-torcida").innerText = player.torcida;
+        document.getElementById("p-tec").innerText = player.tec;
+        document.getElementById("p-torc").innerText = player.torc;
     }
 
+    // Lista rica com múltiplos lances, escolhas, transferências e times solicitados
     const gameSteps = [
         // 1
         {
             type: "input",
-            title: "Criação de Personagem",
-            text: "Bem-vindo ao <strong>Carreira de Craque</strong>! Para começarmos a sua jornada rumo ao estrelato, qual é o seu nome completo ou apelido de jogador?",
+            title: "Criação",
+            text: "Bem-vindo ao <strong>Carreira de Craque</strong>! Qual é o seu nome completo ou apelido de jogador?",
             inputPlaceholder: "Digite seu nome...",
             next: (val) => { player.name = val; }
         },
         // 2
         {
             type: "choices",
-            title: "Escolha da Posição",
-            text: `Prazer em conhecê-lo, <span class="highlight">${player.name}</span>! Em qual posição você atua nos gramados?`,
+            title: "Posição",
+            text: `Prazer, <span class="highlight">${player.name}</span>! Qual é a sua posição em campo?`,
             options: [
-                { text: "⚽ Atacante (Foco em gols e finalização)", pos: "Atacante" },
-                { text: "🎯 Meio-campista (Foco em passes e visão de jogo)", pos: "Meio-campista" },
-                { text: "🛡️ Zagueiro (Foco em desarmes e força defensiva)", pos: "Zagueiro" },
-                { text: "🧤 Goleiro (Foco em reflexos e liderança)", pos: "Goleiro" }
+                { text: "⚽ Atacante (Foco em gols)", pos: "Atacante" },
+                { text: "🎯 Meio-campista (Foco em passes e armação)", pos: "Meio-campista" },
+                { text: "🛡️ Zagueiro (Foco em desarmes)", pos: "Zagueiro" },
+                { text: "🧤 Goleiro (Foco em defesas)", pos: "Goleiro" }
             ],
             action: (opt) => { player.position = opt.pos; }
         },
         // 3
         {
             type: "choices",
-            title: "Escolha do Clube",
-            text: `Excelente escolha de posição! Agora, escolha o clube modesto onde você vai iniciar sua carreira profissional:`,
+            title: "Primeiro Clube",
+            text: "Escolha o clube inicial onde você vai dar os primeiros passos na carreira profissional:",
             options: [
-                { text: "🛡️ Riachuelo FC", clube: "Riachuelo FC" },
-                { text: "🛡️ Esportivo Operário", clube: "Esportivo Operário" },
-                { text: "🛡️ Grêmio Municipal", clube: "Grêmio Municipal" },
-                { text: "🛡️ Vila Nova United", clube: "Vila Nova United" }
+                { text: "🔴 Athletico Paranaense", clube: "Athletico PR" },
+                { text: "⚪ Internacional", clube: "Internacional" },
+                { text: "🟢 Real Betis", clube: "Real Betis" },
+                { text: "⚫ Corinthians", clube: "Corinthians" }
             ],
             action: (opt) => { player.clube = opt.clube; statsPanel.style.display = "grid"; }
         },
         // 4
         {
             type: "choices",
-            title: "Rotina de Treinamento",
-            text: "<strong>Início da Semana:</strong> É véspera de jogo importante. O técnico abriu o treino para aprimoramento físico e tático. Em que você foca na sua sessão extra?",
+            title: "Treinamento Inicial",
+            text: "No primeiro treino da semana, o técnico cobra intensidade máxima. Em que você foca?",
             options: [
-                { text: "A) Treinar finalizações/chutes de longa distância após o horário.", attr: 4, tec: 2, torc: 3 },
-                { text: "B) Focar em passes curtos e movimentação rápida para agradar o técnico.", attr: 2, tec: 5, torc: 1 },
-                { text: "C) Descansar e poupar energia para o dia da partida.", attr: -1, tec: -2, torc: 0 }
+                { text: "A) Treinar finalizações exaustivas de longa distância.", attr: 3, tec: 2, torc: 2, gols: 0, asts: 0 },
+                { text: "B) Exercícios de troca rápida de passes e visão tática.", attr: 2, tec: 4, torc: 1, gols: 0, asts: 1 },
+                { text: "C) Poupar energia e focar apenas na parte física leve.", attr: -1, tec: -1, torc: 0, gols: 0, asts: 0 }
             ]
         },
         // 5
         {
             type: "choices",
-            title: "O Primeiro Jogo Oficial",
-            text: "<strong>Estreia no Campeonato!</strong> O jogo está pegado e empatado 0x0 no primeiro tempo. Você recebe uma bola disputada no meio-campo. O que você faz?",
+            title: "Estreia no Campeonato",
+            text: "<strong>Estreia Oficial!</strong> O jogo está pegado aos 35 do 1º tempo. Você recebe a bola com liberdade na intermediária. O que faz?",
             options: [
-                { text: "A) Arriscar um chute direto de longe para tentar surpreender o goleiro.", attr: 3, tec: 1, torc: 5 },
-                { text: "B) Tocar rápido com categoria para abrir espaço na defesa adversária.", attr: 2, tec: 4, torc: 2 },
-                { text: "C) Proteger a bola no corpo e prender a posse com calma.", attr: 1, tec: 2, torc: -1 }
+                { text: "A) Arriscar um chute forte e certeiro para o gol!", attr: 4, tec: 3, torc: 5, gols: 1, asts: 0 },
+                { text: "B) Dar um passe milimétrico para o companheiro livre na área.", attr: 2, tec: 4, torc: 3, gols: 0, asts: 1 },
+                { text: "C) Segurar a posse de bola com calma para cadenciar o jogo.", attr: 1, tec: 1, torc: 0, gols: 0, asts: 0 }
             ]
         },
         // 6
         {
             type: "choices",
-            title: "Momento Decisivo no Segundo Tempo",
-            text: "<strong>Minuto 80:</strong> O placar continua empatado. Sua equipe ganha uma falta perigosa perto da grande área. O capitão te pergunta se você quer cobrar.",
+            title: "Lance de Bola Parada",
+            text: "Falta perigosa na entrada da área aos 44 minutos. O treinador aponta para você cobrar. Como você bate?",
             options: [
-                { text: "A) Assumir a responsabilidade e cobrar colocado no ângulo!", attr: 5, tec: 3, torc: 7 },
-                { text: "B) Pedir para um companheiro mais experiente cobrar.", attr: 0, tec: 2, torc: -2 },
-                { text: "C) Tocar curto ensaiando uma jogada rápida de surpresa.", attr: 2, tec: 3, torc: 3 }
+                { text: "A) Chute colocado no ângulo superior esquerdo!", attr: 4, tec: 4, torc: 6, gols: 1, asts: 0 },
+                { text: "B) Cruzamento fechado na cabeça do zagueiro subido.", attr: 2, tec: 3, torc: 3, gols: 0, asts: 1 },
+                { text: "C) Cobrança curta ensaiada de segurança.", attr: 1, tec: 1, torc: 1, gols: 0, asts: 0 }
             ]
         },
         // 7
         {
             type: "choices",
-            title: "Entrevista Pós-Jogo",
-            text: "Você jogou bem e a imprensa te para na saída do vestiário para uma entrevista rápida após a partida emocionante. Como você responde?",
+            title: "Crise no Vestiário",
+            text: "O clima no intervalo está tenso após um primeiro tempo ruim da equipe. O capitão discute com o técnico. O que você faz?",
             options: [
-                { text: "A) 'O mérito é todo do grupo, trabalhamos muito forte nos treinos.'", attr: 1, tec: 5, torc: 3 },
-                { text: "B) 'Eu vim para decidir e mostrar meu valor, foi apenas o começo!'", attr: 4, tec: -2, torc: 6 },
-                { text: "C) 'Foi um jogo difícil, agora é focar no próximo adversário.'", attr: 1, tec: 2, torc: 1 }
+                { text: "A) Tomar a liderança, acalmar o grupo e motivar a todos.", attr: 3, tec: 5, torc: 4, gols: 0, asts: 0 },
+                { text: "B) Ficar calado no seu canto para não comprar briga.", attr: 0, tec: -1, torc: -1, gols: 0, asts: 0 },
+                { text: "C) Bater boca com o técnico exigindo mudanças táticas.", attr: -2, tec: -5, torc: 2, gols: 0, asts: 0 }
             ]
         },
         // 8
         {
             type: "choices",
-            title: "Proposta Tentadora",
-            text: "Suas atuações chamaram a atenção de um olheiro de um clube da primeira divisão nacional. Ele te aborda em segredo para uma possível transferência.",
+            title: "Segundo Tempo Eletrizante",
+            text: "Contra-ataque rápido no finalzinho da partida! Você dispara em velocidade rumo à área adversária.",
             options: [
-                { text: "A) Demonstrar interesse imediato e pedir para agilizar a saída.", attr: 3, tec: -4, torc: -5 },
-                { text: "B) Manter o foco total no clube atual e recusar conversar agora.", attr: 2, tec: 5, torc: 6 },
-                { text: "C) Dizer que vai pensar e conversar com seu empresário.", attr: 2, tec: 1, torc: 0 }
+                { text: "A) Chutar cruzado forte no canto oposto do goleiro.", attr: 5, tec: 3, torc: 6, gols: 1, asts: 0 },
+                { text: "B) Rolar para o lado para o artilheiro empurrar para as redes vazias.", attr: 3, tec: 4, torc: 4, gols: 0, asts: 1 },
+                { text: "C) Tentar driblar o zagueiro e acabar perdendo a bola.", attr: -1, tec: -2, torc: -2, gols: 0, asts: 0 }
             ]
         },
         // 9
         {
             type: "choices",
-            title: "A Grande Final do Turno",
-            text: "É a final do campeonato regional! O jogo está nos acréscimos e vocês estão vencendo por 1 a 0, mas o adversário pressiona com tudo no ataque.",
+            title: "Entrevista Pós-Partida",
+            text: "A imprensa cerca você no túnel dos vestiários após a vitória. Qual declaração você dá?",
             options: [
-                { text: "A) Dar um carrinho duro na defesa para parar o ataque (risco de cartão).", attr: 3, tec: 1, torc: 4 },
-                { text: "B) Correr para cobrir o espaço vazio e afastar a bola de cabeça.", attr: 4, tec: 4, torc: 5 },
-                { text: "C) Ficar na frente esperando o contra-ataque para matar o jogo.", attr: 2, tec: -2, torc: 2 }
+                { text: "A) 'O time inteiro jogou com a alma, a vitória é de todos nós.'", attr: 1, tec: 4, torc: 3, gols: 0, asts: 0 },
+                { text: "B) 'Eu vim para decidir e mostrar quem manda nesse gramado!'", attr: 3, tec: -2, torc: 5, gols: 0, asts: 0 },
+                { text: "C) 'Foi um jogo sofrido, agora é pensar na próxima rodada.'", attr: 1, tec: 1, torc: 1, gols: 0, asts: 0 }
             ]
         },
         // 10
         {
+            type: "choices",
+            title: "Primeiro Título Regional",
+            text: "Graças à sua campanha, vocês chegam à final e vencem a taça regional! <strong>Você conquistou seu 1º Título!</strong> Como comemora?",
+            options: [
+                { text: "A) Levantar a taça com a torcida e festejar muito em campo.", attr: 5, tec: 3, torc: 8, titulos: 1, gols: 0, asts: 0 },
+                { text: "B) Agradecer discretamente e focar nos treinos de amanhã.", attr: 2, tec: 5, torc: 2, titulos: 1, gols: 0, asts: 0 },
+                { text: "C) Sair para comemorar na noite antes do descanso.", attr: -3, tec: -4, torc: -3, titulos: 1, gols: 0, asts: 0 }
+            ]
+        },
+        // 11 -> Janela de Transferência 1
+        {
+            type: "choices",
+            title: "Janela de Transferência!",
+            text: "Suas atuações chamaram atenção nacional. Gigantes do futebol brasileiro vêm atrás de você. Para onde deseja se transferir?",
+            options: [
+                { text: "🔴 Assinar com o Flamengo", transferir: "Flamengo", attr: 3, tec: 2, torc: 5 },
+                { text: "🟢 Assinar com o Palmeiras", transferir: "Palmeiras", attr: 3, tec: 3, torc: 4 },
+                { text: "⚫ Assinar com o Corinthians", transferir: "Corinthians", attr: 3, tec: 2, torc: 5 },
+                { text: "⚪ Continuar no clube atual", transferir: null, attr: 2, tec: 4, torc: 3 }
+            ],
+            action: (opt) => { if(opt.transferir) player.clube = opt.transferir; }
+        },
+        // 12
+        {
+            type: "choices",
+            title: "Adaptação ao Novo Clube",
+            text: "No primeiro coletivo tático com seus novos companheiros de alto nível, o nível de exigência é altíssimo.",
+            options: [
+                { text: "A) Chamar a responsabilidade e pedir a bola em todas as jogadas.", attr: 4, tec: 4, torc: 4, gols: 0, asts: 0 },
+                { text: "B) Jogar simples para ganhar a confiança do elenco e do técnico.", attr: 2, tec: 5, torc: 2, gols: 0, asts: 1 },
+                { text: "C) Jogar recuado com medo de errar feio.", attr: -2, tec: -2, torc: -2, gols: 0, asts: 0 }
+            ]
+        },
+        // 13
+        {
+            type: "choices",
+            title: "Clássico Nacional",
+            text: "É dia de clássico histórico! O estádio está lotado com 60 mil pessoas cantando sem parar. Minuto 70, empate em 1x1.",
+            options: [
+                { text: "A) Arriscar um voleio espetacular cruzado na área!", attr: 5, tec: 4, torc: 8, gols: 1, asts: 0 },
+                { text: "B) Encontrar um passe genial por elevação entre os zagueiros.", attr: 3, tec: 5, torc: 5, gols: 0, asts: 1 },
+                { text: "C) Ficar postado na defesa para garantir o ponto fora de casa.", attr: 1, tec: 2, torc: 1, gols: 0, asts: 0 }
+            ]
+        },
+        // 14
+        {
+            type: "choices",
+            title: "Polêmica com a Arbitragem",
+            text: "O juiz anula um gol legítimo seu após revisão confusa. Como você reage em campo?",
+            options: [
+                { text: "A) Reclamar educadamente com o capitão e focar no jogo.", attr: 1, tec: 3, torc: 2, gols: 0, asts: 0 },
+                { text: "B) Bater boca ferozmente com o árbitro (risco de cartão).", attr: -2, tec: -3, torc: 4, gols: 0, asts: 0 },
+                { text: "C) Usar a raiva para correr o dobro e buscar outro gol.", attr: 4, tec: 2, torc: 6, gols: 1, asts: 0 }
+            ]
+        },
+        // 15
+        {
+            type: "choices",
+            title: "Convocação para a Seleção",
+            text: "Suas atuações brilhantes renderam sua **primeira convocação para a Seleção Nacional** principal!",
+            options: [
+                { text: "A) Apresentar-se com foco total e comer a bola nos treinos.", attr: 5, tec: 5, torc: 7, gols: 0, asts: 0 },
+                { text: "B) Relaxar um pouco pelo status alcançado.", attr: -2, tec: -3, torc: -2, gols: 0, asts: 0 }
+            ]
+        },
+        // 16
+        {
+            type: "choices",
+            title: "Estreia na Seleção",
+            text: "Entrando no decorrer do jogo internacional, você tem uma chance clara de marcar nos acréscimos.",
+            options: [
+                { text: "A) Bater colocado tirando do goleiro com extrema categoria!", attr: 5, tec: 5, torc: 9, gols: 1, asts: 0 },
+                { text: "B) Rolar para o colega marcar com o gol livre.", attr: 3, tec: 4, torc: 6, gols: 0, asts: 1 }
+            ]
+        },
+        // 17 -> Janela Europeia
+        {
+            type: "choices",
+            title: "Proposta da Europa!",
+            text: "Gigantes do futebol europeu monitoram seus passos de perto. Chegou a hora de cruzar o oceano. Qual destino você escolhe?",
+            options: [
+                { text: "⚪ Assinar com o Real Madrid", transferir: "Real Madrid", attr: 5, tec: 3, torc: 8 },
+                { text: "🔵 Assinar com o Barcelona", transferir: "Barcelona", attr: 5, tec: 4, torc: 7 },
+                { text: "🔴 Assinar com o Liverpool", transferir: "Liverpool", attr: 4, tec: 4, torc: 7 },
+                { text: "🔵 Assinar com o Chelsea", transferir: "Chelsea", attr: 4, tec: 3, torc: 6 }
+            ],
+            action: (opt) => { if(opt.transferir) player.clube = opt.transferir; }
+        },
+        // 18
+        {
+            type: "choices",
+            title: "Adaptação ao Futebol Europeu",
+            text: "O ritmo na Europa é intenso, físico e ultra veloz. Como você lida com a pressão inicial da imprensa estrangeira?",
+            options: [
+                { text: "A) Responder em campo com dribles desconcertantes e gols decisivos.", attr: 5, tec: 5, torc: 8, gols: 1, asts: 0 },
+                { text: "B) Trabalhar em silêncio absoluto nos treinos táticos.", attr: 2, tec: 4, torc: 3, gols: 0, asts: 0 }
+            ]
+        },
+        // 19
+        {
+            type: "choices",
+            title: "Noite de Champions League",
+            text: "É quartas de final de Liga dos Campeões da Europa! O jogo está pegado e sua equipe precisa de um lance mágico.",
+            options: [
+                { text: "A) Puxar um contra-ataque fulminante e acertar o ângulo!", attr: 6, tec: 5, torc: 10, gols: 1, asts: 0 },
+                { text: "B) Encaixar um passe magistral entre três marcadores para a assistência.", attr: 4, tec: 5, torc: 8, gols: 0, asts: 1 }
+            ]
+        },
+        // 20 -> Final da Carreira
+        {
             type: "final",
-            title: "Fim da Temporada e Consagração",
-            text: "O árbitro apita o fim de jogo! <strong>Vocês são os campeões!</strong> Sua temporada foi inesquecível, marcada por grandes lances, superação e glória com a torcida."
+            title: "Consagração Mundial e Fim da Jornada",
+            text: "Você conquistou a Europa, o mundo e virou uma lenda viva do esporte! <strong>Fim da Carreira Gloriosa!</strong>"
         }
     ];
 
@@ -264,9 +382,9 @@
         const current = gameSteps[stepIndex];
 
         if (current.type !== "final") {
-            progressIndicator.innerText = `Pergunta ${stepIndex + 1} de 10`;
+            progressIndicator.innerText = `Rodada ${stepIndex + 1} de ${gameSteps.length}`;
         } else {
-            progressIndicator.innerText = `Fim da Carreira`;
+            progressIndicator.innerText = `Carreira Concluída`;
         }
 
         storyBox.innerHTML = current.text;
@@ -278,7 +396,7 @@
             `;
         } 
         else if (current.type === "choices") {
-            current.options.forEach((opt, idx) => {
+            current.options.forEach((opt) => {
                 let btn = document.createElement("button");
                 btn.innerText = opt.text;
                 btn.onclick = () => handleChoice(opt);
@@ -289,7 +407,7 @@
             statsPanel.style.display = "grid";
             updateStats();
             
-            let finalMsg = `<br><br>🏆 <strong>Parabéns, ${player.name}!</strong> Você consolidou seu nome na história do ${player.clube} e virou o ídolo da torcida. Seu atributo final chegou a <strong>${player.atributo}</strong>!`;
+            let finalMsg = `<br><br>🏆 <strong>Parabéns, ${player.name}!</strong> Você acumulou <strong>${player.gols} gols</strong>, <strong>${player.assistencias} assistências</strong> e <strong>${player.titulos} títulos</strong> jogando por grandes clubes como o ${player.clube}!`;
             storyBox.innerHTML += finalMsg;
 
             let btn = document.createElement("button");
@@ -319,28 +437,4 @@
         if (opt.attr !== undefined) player.atributo += opt.attr;
         if (opt.tec !== undefined) player.tecnico += opt.tec;
         if (opt.torc !== undefined) player.torcida += opt.torc;
-
-        // Limites para manter os status equilibrados entre 0 e 100
-        player.atributo = Math.max(10, Math.min(100, player.atributo));
-        player.tecnico = Math.max(10, Math.min(100, player.tecnico));
-        player.torcida = Math.max(10, Math.min(100, player.torcida));
-
-        stepIndex++;
-        updateStats();
-        renderGame();
-    }
-
-    function reiniciar() {
-        player = { name: "", position: "", clube: "", atributo: 50, tecnico: 50, torcida: 50 };
-        stepIndex = 0;
-        statsPanel.style.display = "none";
-        renderGame();
-    }
-
-    // Inicialização
-    renderGame();
-</script>
-
-</body>
-  </html>
-  
+        if (opt.gols !== undefined) player.gols +=
