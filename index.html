@@ -1,1 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ Jogo de Futebol - RPG de Carreira Completo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .game-container {
+            background-color: #1e293b;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 650px;
+            padding: 25px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #38bdf8;
+            font-size: 1.8rem;
+            margin-top: 0;
+        }
+        .stats-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+        }
+        .story-box {
+            background-color: #334155;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 120px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            font-size: 1.05rem;
+        }
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        button {
+            background-color: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: left;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        button:hover:not(:disabled) {
+            background-color: #0284c7;
+            transform: translateY(-1px);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: white;
+            box-sizing: border-box;
+        }
+        .highlight {
+            color: #38bdf8;
+            font-weight: bold;
+        }
+        .progress-indicator {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
 
+<div class="game-container">
+    <h1>⚽ Carreira de Craque</h1>
+    <div id="progress-indicator" class="progress-indicator"></div>
+    
+    <div id="stats-panel" class="stats-panel" style="display: none;">
+        <div class="stat-item"><span>Jogador:</span> <strong id="p-name">-</strong></div>
+        <div class="stat-item"><span>Posição:</span> <strong id="p-pos">-</strong></div>
+        <div class="stat-item"><span>Clube:</span> <strong id="p-clube">-</strong></div>
+        <div class="stat-item"><span>Atributo:</span> <strong id="p-attr">50</strong></div>
+        <div class="stat-item"><span>Técnico:</span> <strong id="p-tec">50</strong></div>
+        <div class="stat-item"><span>Torcida:</span> <strong id="p-torcida">50</strong></div>
+    </div>
+
+    <div id="story-box" class="story-box">
+        Carregando jogo...
+    </div>
+
+    <div id="choices-container" class="choices-container">
+        <!-- Botões gerados dinamicamente -->
+    </div>
+</div>
+
+<script>
+    let player = {
+        name: "",
+        position: "",
+        clube: "",
+        atributo: 50,
+        tecnico: 50,
+        torcida: 50
+    };
+
+    let stepIndex = 0; // Controla as 10 etapas
+
+    const storyBox = document.getElementById("story-box");
+    const choicesContainer = document.getElementById("choices-container");
+    const statsPanel = document.getElementById("stats-panel");
+    const progressIndicator = document.getElementById("progress-indicator");
+
+    function updateStats() {
+        document.getElementById("p-name").innerText = player.name;
+        document.getElementById("p-pos").innerText = player.position;
+        document.getElementById("p-clube").innerText = player.clube;
+        document.getElementById("p-attr").innerText = player.atributo;
+        document.getElementById("p-tec").innerText = player.tecnico;
+        document.getElementById("p-torcida").innerText = player.torcida;
+    }
+
+    const gameSteps = [
+        // 1
+        {
+            type: "input",
+            title: "Criação de Personagem",
+            text: "Bem-vindo ao <strong>Carreira de Craque</strong>! Para começarmos a sua jornada rumo ao estrelato, qual é o seu nome completo ou apelido de jogador?",
+            inputPlaceholder: "Digite seu nome...",
+            next: (val) => { player.name = val; }
+        },
+        // 2
+        {
+            type: "choices",
+            title: "Escolha da Posição",
+            text: `Prazer em conhecê-lo, <span class="highlight">${player.name}</span>! Em qual posição você atua nos gramados?`,
+            options: [
+                { text: "⚽ Atacante (Foco em gols e finalização)", pos: "Atacante" },
+                { text: "🎯 Meio-campista (Foco em passes e visão de jogo)", pos: "Meio-campista" },
+                { text: "🛡️ Zagueiro (Foco em desarmes e força defensiva)", pos: "Zagueiro" },
+                { text: "🧤 Goleiro (Foco em reflexos e liderança)", pos: "Goleiro" }
+            ],
+            action: (opt) => { player.position = opt.pos; }
+        },
+        // 3
+        {
+            type: "choices",
+            title: "Escolha do Clube",
+            text: `Excelente escolha de posição! Agora, escolha o clube modesto onde você vai iniciar sua carreira profissional:`,
+            options: [
+                { text: "🛡️ Riachuelo FC", clube: "Riachuelo FC" },
+                { text: "🛡️ Esportivo Operário", clube: "Esportivo Operário" },
+                { text: "🛡️ Grêmio Municipal", clube: "Grêmio Municipal" },
+                { text: "🛡️ Vila Nova United", clube: "Vila Nova United" }
+            ],
+            action: (opt) => { player.clube = opt.clube; statsPanel.style.display = "grid"; }
+        },
+        // 4
+        {
+            type: "choices",
+            title: "Rotina de Treinamento",
+            text: "<strong>Início da Semana:</strong> É véspera de jogo importante. O técnico abriu o treino para aprimoramento físico e tático. Em que você foca na sua sessão extra?",
+            options: [
+                { text: "A) Treinar finalizações/chutes de longa distância após o horário.", attr: 4, tec: 2, torc: 3 },
+                { text: "B) Focar em passes curtos e movimentação rápida para agradar o técnico.", attr: 2, tec: 5, torc: 1 },
+                { text: "C) Descansar e poupar energia para o dia da partida.", attr: -1, tec: -2, torc: 0 }
+            ]
+        },
+        // 5
+        {
+            type: "choices",
+            title: "O Primeiro Jogo Oficial",
+            text: "<strong>Estreia no Campeonato!</strong> O jogo está pegado e empatado 0x0 no primeiro tempo. Você recebe uma bola disputada no meio-campo. O que você faz?",
+            options: [
+                { text: "A) Arriscar um chute direto de longe para tentar surpreender o goleiro.", attr: 3, tec: 1, torc: 5 },
+                { text: "B) Tocar rápido com categoria para abrir espaço na defesa adversária.", attr: 2, tec: 4, torc: 2 },
+                { text: "C) Proteger a bola no corpo e prender a posse com calma.", attr: 1, tec: 2, torc: -1 }
+            ]
+        },
+        // 6
+        {
+            type: "choices",
+            title: "Momento Decisivo no Segundo Tempo",
+            text: "<strong>Minuto 80:</strong> O placar continua empatado. Sua equipe ganha uma falta perigosa perto da grande área. O capitão te pergunta se você quer cobrar.",
+            options: [
+                { text: "A) Assumir a responsabilidade e cobrar colocado no ângulo!", attr: 5, tec: 3, torc: 7 },
+                { text: "B) Pedir para um companheiro mais experiente cobrar.", attr: 0, tec: 2, torc: -2 },
+                { text: "C) Tocar curto ensaiando uma jogada rápida de surpresa.", attr: 2, tec: 3, torc: 3 }
+            ]
+        },
+        // 7
+        {
+            type: "choices",
+            title: "Entrevista Pós-Jogo",
+            text: "Você jogou bem e a imprensa te para na saída do vestiário para uma entrevista rápida após a partida emocionante. Como você responde?",
+            options: [
+                { text: "A) 'O mérito é todo do grupo, trabalhamos muito forte nos treinos.'", attr: 1, tec: 5, torc: 3 },
+                { text: "B) 'Eu vim para decidir e mostrar meu valor, foi apenas o começo!'", attr: 4, tec: -2, torc: 6 },
+                { text: "C) 'Foi um jogo difícil, agora é focar no próximo adversário.'", attr: 1, tec: 2, torc: 1 }
+            ]
+        },
+        // 8
+        {
+            type: "choices",
+            title: "Proposta Tentadora",
+            text: "Suas atuações chamaram a atenção de um olheiro de um clube da primeira divisão nacional. Ele te aborda em segredo para uma possível transferência.",
+            options: [
+                { text: "A) Demonstrar interesse imediato e pedir para agilizar a saída.", attr: 3, tec: -4, torc: -5 },
+                { text: "B) Manter o foco total no clube atual e recusar conversar agora.", attr: 2, tec: 5, torc: 6 },
+                { text: "C) Dizer que vai pensar e conversar com seu empresário.", attr: 2, tec: 1, torc: 0 }
+            ]
+        },
+        // 9
+        {
+            type: "choices",
+            title: "A Grande Final do Turno",
+            text: "É a final do campeonato regional! O jogo está nos acréscimos e vocês estão vencendo por 1 a 0, mas o adversário pressiona com tudo no ataque.",
+            options: [
+                { text: "A) Dar um carrinho duro na defesa para parar o ataque (risco de cartão).", attr: 3, tec: 1, torc: 4 },
+                { text: "B) Correr para cobrir o espaço vazio e afastar a bola de cabeça.", attr: 4, tec: 4, torc: 5 },
+                { text: "C) Ficar na frente esperando o contra-ataque para matar o jogo.", attr: 2, tec: -2, torc: 2 }
+            ]
+        },
+        // 10
+        {
+            type: "final",
+            title: "Fim da Temporada e Consagração",
+            text: "O árbitro apita o fim de jogo! <strong>Vocês são os campeões!</strong> Sua temporada foi inesquecível, marcada por grandes lances, superação e glória com a torcida."
+        }
+    ];
+
+    function renderGame() {
+        choicesContainer.innerHTML = "";
+        const current = gameSteps[stepIndex];
+
+        if (current.type !== "final") {
+            progressIndicator.innerText = `Pergunta ${stepIndex + 1} de 10`;
+        } else {
+            progressIndicator.innerText = `Fim da Carreira`;
+        }
+
+        storyBox.innerHTML = current.text;
+
+        if (current.type === "input") {
+            choicesContainer.innerHTML = `
+                <input type="text" id="user-input" placeholder="${current.inputPlaceholder}">
+                <button onclick="handleInput()">Avançar</button>
+            `;
+        } 
+        else if (current.type === "choices") {
+            current.options.forEach((opt, idx) => {
+                let btn = document.createElement("button");
+                btn.innerText = opt.text;
+                btn.onclick = () => handleChoice(opt);
+                choicesContainer.appendChild(btn);
+            });
+        } 
+        else if (current.type === "final") {
+            statsPanel.style.display = "grid";
+            updateStats();
+            
+            let finalMsg = `<br><br>🏆 <strong>Parabéns, ${player.name}!</strong> Você consolidou seu nome na história do ${player.clube} e virou o ídolo da torcida. Seu atributo final chegou a <strong>${player.atributo}</strong>!`;
+            storyBox.innerHTML += finalMsg;
+
+            let btn = document.createElement("button");
+            btn.innerText = "🔄 Jogar Novamente";
+            btn.onclick = () => reiniciar();
+            choicesContainer.appendChild(btn);
+        }
+    }
+
+    function handleInput() {
+        const val = document.getElementById("user-input").value.trim();
+        if (val) {
+            gameSteps[stepIndex].next(val);
+            stepIndex++;
+            updateStats();
+            renderGame();
+        } else {
+            alert("Por favor, digite um nome válido!");
+        }
+    }
+
+    function handleChoice(opt) {
+        const current = gameSteps[stepIndex];
+        if (current.action) {
+            current.action(opt);
+        }
+        if (opt.attr !== undefined) player.atributo += opt.attr;
+        if (opt.tec !== undefined) player.tecnico += opt.tec;
+        if (opt.torc !== undefined) player.torcida += opt.torc;
+
+        // Limites para manter os status equilibrados entre 0 e 100
+        player.atributo = Math.max(10, Math.min(100, player.atributo));
+        player.tecnico = Math.max(10, Math.min(100, player.tecnico));
+        player.torcida = Math.max(10, Math.min(100, player.torcida));
+
+        stepIndex++;
+        updateStats();
+        renderGame();
+    }
+
+    function reiniciar() {
+        player = { name: "", position: "", clube: "", atributo: 50, tecnico: 50, torcida: 50 };
+        stepIndex = 0;
+        statsPanel.style.display = "none";
+        renderGame();
+    }
+
+    // Inicialização
+    renderGame();
+</script>
+
+</body>
+  </html>
+  
